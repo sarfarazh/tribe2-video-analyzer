@@ -18,65 +18,29 @@ Once the pod is running:
 
 ```bash
 # Clone the repo
-git clone https://github.com/<your-username>/tribe_analyzer.git
-cd tribe_analyzer
+git clone https://github.com/sarfarazh/tribev2-video-analyzer.git
+cd tribev2-video-analyzer
 
-# Install all dependencies (tribev2 + gradio + openai + everything else)
-pip install -r requirements.txt
+# Run the setup script (handles everything)
+bash setup.sh
 ```
 
-This single command installs:
-- `tribev2[plotting]` — Meta's TRIBE v2 brain encoding model (pulled from GitHub)
-- `gradio` — Web UI
-- `openai` — OpenRouter API client (OpenAI-compatible)
-- `imageio[ffmpeg]` — GIF generation
-- `numpy`, `pandas`, `matplotlib` — Data processing and plotting
+The setup script:
+1. Installs `tribev2` without letting it downgrade PyTorch
+2. Installs all other dependencies (Gradio, OpenAI, imageio, etc.)
+3. Ensures PyTorch 2.8.0+cu128 with Blackwell (sm_120) support
+4. Installs OSMesa for headless brain surface rendering
+5. Verifies everything works
 
-### If ffmpeg is missing
+**Why not just `pip install -r requirements.txt`?** Because tribev2 pins `torch<2.7`, which downgrades PyTorch and breaks Blackwell GPU support. The setup script avoids this.
 
-Most RunPod ML templates include ffmpeg. If not:
+## 4. Launch the App
 
-```bash
-apt-get update && apt-get install -y ffmpeg
-```
-
-### Install OSMesa (required for headless rendering)
-
-TRIBE v2 uses PyVista/VTK to render brain surface plots. On a headless server (no display), you need OSMesa:
-
-```bash
-apt-get update && apt-get install -y libosmesa6-dev libgl1-mesa-dev
-```
-
-### If CUDA NVRTC is missing
-
-If you see errors about CUDA runtime compilation:
-
-```bash
-apt-get install -y cuda-nvrtc-12-8
-```
-
-(Adjust the version to match your CUDA — run `nvcc --version` to check.)
-
-## 4. HuggingFace Login
-
-TRIBE v2 model weights are hosted on HuggingFace. You need a HF account with access to `facebook/tribev2`.
-
-```bash
-# Login to HuggingFace (one-time)
-huggingface-cli login
-```
-
-Paste your HuggingFace token when prompted. Get one at https://huggingface.co/settings/tokens
+The setup script already handles HuggingFace login (prompts for your token during install) and persists all required environment variables to `~/.bashrc`.
 
 **Note**: Check if `facebook/tribev2` requires you to accept a license agreement on the model page first: https://huggingface.co/facebook/tribev2
 
-## 5. Launch the App
-
 ```bash
-export HF_HUB_ENABLE_HF_TRANSFER=0
-export PYVISTA_OFF_SCREEN=true
-export MESA_GL_VERSION_OVERRIDE=4.5
 python app.py
 ```
 

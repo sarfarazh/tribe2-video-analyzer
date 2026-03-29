@@ -40,8 +40,8 @@ A Gradio web app that analyzes short-form video (Instagram Reels / YouTube Short
 
 ### Step 1: Project Setup
 
-**File:** `tribe_analyzer/app.py` (main entry point)
-**File:** `tribe_analyzer/requirements.txt`
+**File:** `app.py` (main entry point)
+**File:** `requirements.txt`
 
 Dependencies:
 - `tribev2[plotting]` (from GitHub)
@@ -58,7 +58,7 @@ plotter = PlotBrain(mesh="fsaverage5")
 
 ### Step 2: Video Splitting
 
-**File:** `tribe_analyzer/video.py`
+**File:** `video.py`
 
 Split uploaded video into 20-second segments using ffmpeg (available on RunPod):
 - Input: video file path, segment duration (default 20s)
@@ -74,7 +74,7 @@ Why split the video file (not just predictions):
 
 ### Step 3: TRIBE v2 Processing
 
-**File:** `tribe_analyzer/brain.py`
+**File:** `brain.py`
 
 For each 20s segment:
 1. `df = model.get_events_dataframe(video_path=segment_path)`
@@ -87,7 +87,7 @@ Output per segment:
 
 ### Step 4: Brain Region Aggregation
 
-**File:** `tribe_analyzer/brain.py`
+**File:** `brain.py`
 
 Convert raw vertex data into meaningful region-level activations:
 
@@ -109,7 +109,7 @@ Output: structured dict with per-second, per-network activation values + peak/dr
 
 ### Step 5: Heatmap Image Generation
 
-**File:** `tribe_analyzer/visuals.py`
+**File:** `visuals.py`
 
 Generate three types of visualizations:
 
@@ -165,7 +165,7 @@ All static images saved to temp directory for:
 
 ### Step 6: Build JSON Summary
 
-**File:** `tribe_analyzer/analysis.py`
+**File:** `analysis.py`
 
 Structure:
 ```json
@@ -214,7 +214,7 @@ Save to temp file for reference + send to LLM.
 
 ### Step 7: OpenRouter LLM Report Generation
 
-**File:** `tribe_analyzer/report.py`
+**File:** `report.py`
 
 API call to OpenRouter (OpenAI-compatible):
 ```python
@@ -257,7 +257,7 @@ response = client.chat.completions.create(
 
 ### Step 8: Gradio UI
 
-**File:** `tribe_analyzer/app.py`
+**File:** `app.py`
 
 Layout:
 ```
@@ -307,7 +307,7 @@ Gradio components:
 
 ### Step 9: Downloadable Report
 
-**File:** `tribe_analyzer/report.py`
+**File:** `report.py`
 
 Generate an HTML file that includes:
 - The full LLM-generated report (markdown → HTML)
@@ -320,19 +320,20 @@ Generate an HTML file that includes:
 ## File Structure
 
 ```
-tribe_demo/
-├── tribe_demo.ipynb          # Original notebook (untouched)
-└── tribe_analyzer/
-    ├── docs/
-    │   └── PLAN.md           # This file
-    ├── app.py                # Gradio UI + main entry point
-    ├── video.py              # Video splitting (ffmpeg)
-    ├── brain.py              # TRIBE v2 processing + region aggregation
-    ├── visuals.py            # Heatmap image generation
-    ├── analysis.py           # JSON summary builder
-    ├── report.py             # OpenRouter LLM call + HTML report generation
-    ├── networks.py           # Brain network definitions (Schaefer → functional mapping)
-    └── requirements.txt      # Dependencies
+tribev2-video-analyzer/
+├── docs/
+│   ├── PLAN.md               # This file
+│   ├── RUNPOD_SETUP.md       # RunPod deployment guide
+│   └── TROUBLESHOOTING.md    # Common issues and fixes
+├── app.py                    # Gradio UI + main entry point
+├── video.py                  # Video splitting (ffmpeg)
+├── brain.py                  # TRIBE v2 processing + region aggregation
+├── visuals.py                # Heatmap image generation
+├── analysis.py               # JSON summary builder
+├── report.py                 # OpenRouter LLM call + HTML report generation
+├── networks.py               # Brain network definitions (Schaefer → functional mapping)
+├── setup.sh                  # One-command RunPod setup
+└── requirements.txt          # Dependencies
 ```
 
 ---

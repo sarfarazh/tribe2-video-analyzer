@@ -34,7 +34,7 @@ Maximum video length enforced in the UI: **120 seconds**.
 
 ## Installation
 
-From the `tribe_analyzer` directory:
+From the `tribev2-video-analyzer` directory:
 
 ```bash
 pip install -r requirements.txt
