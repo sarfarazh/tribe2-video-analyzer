@@ -1,5 +1,33 @@
 # Troubleshooting Guide — TRIBE Analyzer
 
+## VTK/PyVista segfault or "bad X server connection" on headless server
+
+**Symptom:**
+```
+vtkXOpenGLRenderWindow.:1460  WARN| bad X server connection. DISPLAY=
+vtkOpenGLRenderWindow.c:645   WARN| Failed to load EGL!
+vtkOSOpenGLRenderWindow:149   WARN| libOSMesa not found.
+Segmentation fault (core dumped)
+```
+
+**Cause:** TRIBE v2 uses PyVista/VTK to render brain surface plots. On a headless server (no monitor/display), VTK tries X11, fails, then tries EGL and OSMesa. If neither is installed, it segfaults.
+
+**Fix:** Install OSMesa and set environment variables:
+
+```bash
+# Install OSMesa
+apt-get update && apt-get install -y libosmesa6-dev libgl1-mesa-dev
+
+# Set environment before launching
+export PYVISTA_OFF_SCREEN=true
+export MESA_GL_VERSION_OVERRIDE=4.5
+python app.py
+```
+
+**Note:** After the fix, you may still see `WARN| bad X server connection. DISPLAY=` — this is harmless. VTK tries X11 first, fails, then successfully falls back to OSMesa.
+
+---
+
 ## PyTorch + Blackwell GPU incompatibility (sm_120)
 
 **Symptom:**

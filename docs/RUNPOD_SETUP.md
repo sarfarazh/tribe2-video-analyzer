@@ -40,6 +40,14 @@ Most RunPod ML templates include ffmpeg. If not:
 apt-get update && apt-get install -y ffmpeg
 ```
 
+### Install OSMesa (required for headless rendering)
+
+TRIBE v2 uses PyVista/VTK to render brain surface plots. On a headless server (no display), you need OSMesa:
+
+```bash
+apt-get update && apt-get install -y libosmesa6-dev libgl1-mesa-dev
+```
+
 ### If CUDA NVRTC is missing
 
 If you see errors about CUDA runtime compilation:
@@ -66,6 +74,9 @@ Paste your HuggingFace token when prompted. Get one at https://huggingface.co/se
 ## 5. Launch the App
 
 ```bash
+export HF_HUB_ENABLE_HF_TRANSFER=0
+export PYVISTA_OFF_SCREEN=true
+export MESA_GL_VERSION_OVERRIDE=4.5
 python app.py
 ```
 
