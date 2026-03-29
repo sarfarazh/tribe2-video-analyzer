@@ -19,6 +19,26 @@ def get_video_duration(video_path: str | Path) -> float:
     return float(result.stdout.strip())
 
 
+def trim_video(video_path: str | Path, max_duration: int = 120) -> Path:
+    """Trim a video to the first max_duration seconds.
+
+    Returns:
+        Path to the trimmed video file.
+    """
+    video_path = Path(video_path)
+    tmp = Path(tempfile.mkdtemp(prefix="tribe_trim_")) / "trimmed.mp4"
+    subprocess.run(
+        [
+            "ffmpeg", "-i", str(video_path),
+            "-t", str(max_duration),
+            "-c", "copy",
+            "-y", str(tmp),
+        ],
+        capture_output=True, check=True,
+    )
+    return tmp
+
+
 def split_video(video_path: str | Path, segment_duration: int = 20) -> list[dict]:
     """Split a video into fixed-duration segments using ffmpeg.
 
@@ -35,9 +55,6 @@ def split_video(video_path: str | Path, segment_duration: int = 20) -> list[dict
     """
     video_path = Path(video_path)
     total_duration = get_video_duration(video_path)
-
-    if total_duration > 120:
-        raise ValueError(f"Video is {total_duration:.0f}s — max supported is 120s")
 
     tmp_dir = Path(tempfile.mkdtemp(prefix="tribe_segments_"))
     pattern = str(tmp_dir / "segment_%03d.mp4")
