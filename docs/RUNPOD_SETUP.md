@@ -66,15 +66,26 @@ If you exposed port 7860, go to your pod's **Connect** tab and click the **7860*
 ## 6. Using the App
 
 1. Paste your **OpenRouter API key** (get one at https://openrouter.ai/keys)
-2. Upload a video (max 120 seconds — optimized for Reels/Shorts)
-3. Click **Analyze**
+2. Choose an input tab:
+   - **Script** — paste your video script text. TRIBE v2 converts it to speech internally.
+   - **Voiceover** — upload an audio file (`.wav`, `.mp3`, etc.). Splits into 20s segments.
+   - **Video** — upload a video file (max 2:30, trimmed to 2:00). Full visual + audio analysis.
+3. Click the **Analyze** button for your chosen tab
 4. Wait for processing (~3–5 minutes for a 60s video):
-   - Video splits into 20s segments
-   - TRIBE v2 processes each segment
-   - Brain heatmaps and GIFs render
+   - Media splits into 20s segments
+   - TRIBE v2 processes each segment (with per-segment checkpointing)
+   - Brain heatmaps, GIFs, and MP4s render
    - Claude Opus 4.6 generates the report
-5. View results: animated GIFs, heatmap gallery, peak moments, full report
-6. Download the HTML report and raw JSON data
+5. View results: brain activity videos, heatmap gallery, peak/drop moments, full report
+6. Download: HTML report, PDF report, or ZIP package with everything
+
+### History & Persistence
+
+- All results are saved to `./results/` and survive app restarts
+- Use the **History** tab to browse and reload past analyses
+- Re-uploading the same file loads cached results instantly (no GPU or token cost)
+- If the app crashes mid-analysis, restart and re-submit — it resumes from the last checkpoint
+- **Important:** Results do NOT survive pod termination. Download ZIPs as backup before stopping your pod.
 
 ## 7. Costs
 

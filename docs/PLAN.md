@@ -325,27 +325,42 @@ tribev2-video-analyzer/
 │   ├── PLAN.md               # This file
 │   ├── RUNPOD_SETUP.md       # RunPod deployment guide
 │   └── TROUBLESHOOTING.md    # Common issues and fixes
-├── app.py                    # Gradio UI + main entry point
-├── video.py                  # Video splitting (ffmpeg)
-├── brain.py                  # TRIBE v2 processing + region aggregation
-├── visuals.py                # Heatmap image generation
+├── app.py                    # Gradio UI (4 tabs) + pipeline with checkpointing
+├── video.py                  # Video/audio splitting, trimming, text-to-file (ffmpeg)
+├── brain.py                  # TRIBE v2 processing (video/audio/text) + region aggregation
+├── persistence.py            # Save/load results, checkpointing, dedup, history index
+├── visuals.py                # Heatmaps, peak images, GIFs, MP4s
 ├── analysis.py               # JSON summary builder
-├── report.py                 # OpenRouter LLM call + HTML report generation
+├── report.py                 # OpenRouter LLM call + HTML/PDF/ZIP export
 ├── networks.py               # Brain network definitions (Schaefer → functional mapping)
 ├── setup.sh                  # One-command RunPod setup
+├── results/                  # Persisted analysis outputs (gitignored)
 └── requirements.txt          # Dependencies
 ```
 
 ---
 
+## Completed Features (beyond original plan)
+
+- **Multi-input support**: Script (text → gTTS), Voiceover (audio), and Video tabs
+- **MP4 brain videos**: 30fps MP4s with original audio muxed in via ffmpeg
+- **PDF reports**: Generated via weasyprint from the HTML report
+- **ZIP packaging**: One-click download of all outputs (HTML, PDF, JSON, MP4s, GIFs, heatmaps)
+- **Persistence & checkpointing**: All results saved to `./results/` with per-segment checkpoints. Crash-safe resume. Content-hash deduplication.
+- **History tab**: Browse, reload, and delete past analyses
+- **Environment auto-config**: `app.py` sets HF_HUB_ENABLE_HF_TRANSFER, PYVISTA_OFF_SCREEN, etc. at startup
+- **Actionable report format**: "What to Change" section with Fix Weak Spots, Double Down on What Works, and General Virality Tips
+
+---
+
 ## Open Risks / Considerations
 
-1. **Schaefer atlas mapping**: Need to verify that `PlotBrain(atlas_name="schaefer_2018", atlas_dim=400)` gives us region labels we can map to functional networks. If not, we'll use a manual vertex-to-region mapping based on fsaverage5 parcellation.
+1. **Schaefer atlas mapping**: Uses `PlotBrain(atlas_name="schaefer_2018", atlas_dim=400)` with a fallback approximate mapping if atlas labels aren't accessible.
 
-2. **Segment boundary artifacts**: Splitting the video at 20s marks means TRIBE processes each chunk independently — speech/context crossing boundaries may lose some accuracy. Acceptable tradeoff for cleaner analysis.
+2. **Segment boundary artifacts**: Splitting media at 20s marks means TRIBE processes each chunk independently — speech/context crossing boundaries may lose some accuracy. Acceptable tradeoff for cleaner analysis.
 
-3. **OpenRouter costs**: Claude Opus 4.6 with multimodal input (JSON + ~6-8 images) will cost ~$0.50-1.00 per analysis. Worth noting in the UI.
+3. **OpenRouter costs**: Claude Opus 4.6 with multimodal input (JSON + ~15 images) costs ~$0.50-1.00 per analysis. Persistence ensures no duplicate charges on re-runs.
 
-4. **Video duration limit**: Should cap at 120s to keep processing time and costs reasonable. Will add validation.
+4. **Media duration limit**: Capped at 120s (allows upload up to 150s, trims to 120s).
 
-5. **ffmpeg dependency**: Must be available on RunPod. Most ML templates include it; if not, install via `apt-get install ffmpeg`.
+5. **Pod persistence**: Results in `./results/` survive app restarts but NOT pod termination. Users should download ZIPs as backup.

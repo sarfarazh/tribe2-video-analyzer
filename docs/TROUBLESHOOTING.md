@@ -183,3 +183,50 @@ If video splitting fails:
 
 - Check internet connectivity from the pod: `curl -I https://huggingface.co`
 - Re-run `python -c "from huggingface_hub import login; login()"` if your token expired
+
+---
+
+## ffmpeg exit code 187 during MP4 encoding
+
+**Symptom:**
+```
+subprocess.CalledProcessError: Command '['ffmpeg', '-framerate', '30', '-i', '...frame_%06d.png',
+'-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-y', '...video_only.mp4']' returned non-zero exit status 187.
+```
+
+**Cause:** Brain heatmap PNGs from matplotlib can have odd pixel dimensions (width or height not divisible by 2). `libx264` with `yuv420p` requires even dimensions.
+
+**Fix:** Already applied in `visuals.py`. The ffmpeg command includes:
+```
+-vf "scale=trunc(iw/2)*2:trunc(ih/2)*2"
+```
+If you see this error, make sure you have the latest code: `git pull`.
+
+---
+
+## Port 7860 already in use
+
+**Symptom:**
+```
+OSError: Cannot find empty port in range: 7860-7860.
+```
+
+**Cause:** A previous `python app.py` process is still running.
+
+**Fix:**
+```bash
+kill $(lsof -t -i:7860) 2>/dev/null; python app.py
+```
+
+---
+
+## Gradio theme parameter warning
+
+**Symptom:**
+```
+UserWarning: The parameters have been moved from the Blocks constructor to the launch() method in Gradio 6.0: theme
+```
+
+**Cause:** Gradio 6.0 changed where the `theme` parameter goes. This is a harmless warning — the app works fine.
+
+**Fix:** No action needed. This will be resolved in a future update.
