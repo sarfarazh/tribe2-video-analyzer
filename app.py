@@ -48,8 +48,15 @@ def analyze_video(video_file: str, api_key: str, progress=gr.Progress()):
 
     video_path = Path(video_file)
     duration = get_video_duration(video_path)
+    if duration > 150:
+        raise gr.Error(f"Video is {duration:.0f}s — max supported is 2:30.")
+
+    # Trim to 120s if longer
     if duration > 120:
-        raise gr.Error(f"Video is {duration:.0f}s — max supported is 120 seconds.")
+        from video import trim_video
+        logger.info(f"Video is {duration:.0f}s — trimming to first 120s")
+        video_path = trim_video(video_path, max_duration=120)
+        duration = 120
 
     output_dir = Path(tempfile.mkdtemp(prefix="tribe_output_"))
     plotter = get_plotter()
