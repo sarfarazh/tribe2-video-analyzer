@@ -4,23 +4,28 @@
 
 set -e
 
-echo "=== Installing tribev2 (without torch dependency override) ==="
+VENV_DIR="${HOME}/.venv/tribe"
+
+echo "=== Creating virtual environment ==="
+python -m venv "$VENV_DIR" --system-site-packages=false
+source "$VENV_DIR/bin/activate"
+
+echo "=== Installing PyTorch with Blackwell (sm_120) support ==="
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126
+
+echo "=== Installing tribev2 (without dependency overrides) ==="
 pip install --no-deps "tribev2[plotting] @ git+https://github.com/facebookresearch/tribev2.git"
 
-echo "=== Installing remaining dependencies ==="
+echo "=== Installing core dependencies ==="
 pip install gradio>=4.0 openai>=1.0 numpy pandas matplotlib "imageio[ffmpeg]" weasyprint Pillow
 
-echo "=== Installing tribev2 sub-dependencies (excluding torch/torchvision) ==="
+echo "=== Installing tribev2 sub-dependencies ==="
 pip install neuralset neuraltrain x_transformers einops mne mne_bids nilearn pyvista nibabel \
     safetensors transformers huggingface_hub spacy polars submitit exca confection \
     moviepy pydub soundfile langdetect colorcet julius Levenshtein \
     seaborn scipy scikit-image pydantic tqdm
 
-echo "=== Ensuring PyTorch with Blackwell (sm_120) support ==="
-pip uninstall -y torch torchvision torchaudio
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126
-
-echo "=== Installing Chatterbox TTS (requires numpy + torch) ==="
+echo "=== Installing Chatterbox TTS ==="
 pip install chatterbox-tts
 
 echo "=== Installing system dependencies ==="
@@ -38,19 +43,18 @@ echo "HuggingFace login complete."
 
 echo ""
 echo "=== Setting environment variables ==="
-# Write env vars to .bashrc so they persist across shell sessions
-grep -q "HF_HUB_ENABLE_HF_TRANSFER" ~/.bashrc 2>/dev/null || {
-    cat >> ~/.bashrc << 'EOF'
+grep -q "TRIBE Analyzer environment" ~/.bashrc 2>/dev/null || {
+    cat >> ~/.bashrc << EOF
 
 # TRIBE Analyzer environment
 export HF_HUB_ENABLE_HF_TRANSFER=0
 export PYVISTA_OFF_SCREEN=true
 export MESA_GL_VERSION_OVERRIDE=4.5
+source "$VENV_DIR/bin/activate"
 EOF
-    echo "Added environment variables to ~/.bashrc"
+    echo "Added environment variables and venv activation to ~/.bashrc"
 }
 
-# Also export for current session
 export HF_HUB_ENABLE_HF_TRANSFER=0
 export PYVISTA_OFF_SCREEN=true
 export MESA_GL_VERSION_OVERRIDE=4.5
@@ -66,13 +70,16 @@ print(f'Architectures: {archs}')
 if 'sm_120' in archs:
     print('Blackwell (sm_120): OK')
 else:
-    print('WARNING: sm_120 not in arch list — may still work via forward compat')
+    print('WARNING: sm_120 not in arch list')
     print(f'GPU: {torch.cuda.get_device_name(0)}')
 "
 python -c "import tribev2; print('tribev2: OK')"
 python -c "import gradio; print(f'Gradio: {gradio.__version__}')"
+python -c "from chatterbox.tts_turbo import ChatterboxTurboTTS; print('Chatterbox TTS: OK')"
 
 echo ""
 echo "=== Setup complete! ==="
+echo "Venv: $VENV_DIR"
 echo "Launch with:"
+echo "  source $VENV_DIR/bin/activate"
 echo "  python app.py"
