@@ -128,23 +128,63 @@ def split_audio(audio_path: str | Path, segment_duration: int = 20) -> list[dict
     return segments
 
 
+def _chunk_text(text: str, max_chars: int = 250) -> list[str]:
+    """Split text into chunks at sentence boundaries, each under max_chars."""
+    import re
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+
+    chunks = []
+    current = ""
+    for sent in sentences:
+        if len(sent) > max_chars:
+            # Split long sentences at commas, semicolons, colons, dashes
+            parts = re.split(r'(?<=[,;:\-])\s+', sent)
+            for part in parts:
+                if current and len(current) + len(part) + 1 > max_chars:
+                    chunks.append(current.strip())
+                    current = part
+                else:
+                    current = f"{current} {part}".strip() if current else part
+        elif current and len(current) + len(sent) + 1 > max_chars:
+            chunks.append(current.strip())
+            current = sent
+        else:
+            current = f"{current} {sent}".strip() if current else sent
+
+    if current:
+        chunks.append(current.strip())
+
+    return chunks
+
+
 def text_to_speech(text: str) -> Path:
     """Convert text to speech using Chatterbox TTS Turbo.
+
+    Chunks text at sentence boundaries (~250 chars each) and concatenates.
 
     Returns:
         Path to the generated WAV file.
     """
     from chatterbox.tts_turbo import ChatterboxTurboTTS
+    import numpy as np
     import soundfile as sf
 
     logger.info("Loading Chatterbox TTS Turbo model...")
     model = ChatterboxTurboTTS.from_pretrained(device="cuda")
 
-    logger.info(f"Generating speech for {len(text)} characters...")
-    wav = model.generate(text)
+    chunks = _chunk_text(text)
+    logger.info(f"Generating speech for {len(text)} chars in {len(chunks)} chunks...")
+
+    audio_parts = []
+    for i, chunk in enumerate(chunks):
+        logger.info(f"  Chunk {i + 1}/{len(chunks)}: {len(chunk)} chars")
+        wav = model.generate(chunk)
+        audio_parts.append(wav.squeeze().cpu().numpy())
+
+    combined = np.concatenate(audio_parts)
 
     out_path = Path(tempfile.mkdtemp(prefix="tribe_tts_")) / "speech.wav"
-    sf.write(str(out_path), wav.squeeze().cpu().numpy(), model.sr)
+    sf.write(str(out_path), combined, model.sr)
     logger.info(f"TTS output saved to {out_path}")
 
     return out_path
