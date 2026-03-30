@@ -13,11 +13,14 @@ pip install gradio>=4.0 openai>=1.0 numpy pandas matplotlib "imageio[ffmpeg]" we
 echo "=== Installing tribev2 sub-dependencies (excluding torch/torchvision) ==="
 pip install neuralset neuraltrain x_transformers einops mne mne_bids nilearn pyvista nibabel \
     safetensors transformers huggingface_hub spacy polars submitit exca confection \
-    moviepy pydub soundfile chatterbox-tts langdetect colorcet julius Levenshtein \
+    moviepy pydub soundfile langdetect colorcet julius Levenshtein \
     seaborn scipy scikit-image pydantic tqdm
 
 echo "=== Ensuring PyTorch 2.8 + CUDA 12.8 (Blackwell support) ==="
 pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+
+echo "=== Installing Chatterbox TTS (requires numpy + torch) ==="
+pip install chatterbox-tts
 
 echo "=== Installing system dependencies ==="
 apt-get update && apt-get install -y libosmesa6-dev libgl1-mesa-dev ffmpeg
